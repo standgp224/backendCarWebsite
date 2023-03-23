@@ -2,8 +2,15 @@ package com.udacity.vehicles.api;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
+
+import org.assertj.core.api.Assertions;
+import org.json.JSONArray;
+import org.json.JSONObject;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.doNothing;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -20,7 +27,11 @@ import com.udacity.vehicles.domain.car.Details;
 import com.udacity.vehicles.domain.manufacturer.Manufacturer;
 import com.udacity.vehicles.service.CarService;
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -96,6 +107,33 @@ public class CarControllerTest {
          *   the whole list of vehicles. This should utilize the car from `getCar()`
          *   below (the vehicle will be the first in the list).
          */
+        Car car1 = getCar();
+        car1.setId(1L);
+
+        Car car2 = getCar();
+        car2.setId(2L);
+
+        List<Car> cars = Arrays.asList(car1, car2);
+
+        given(carService.list()).willReturn(cars);
+
+        MvcResult result = mvc.perform(
+                get(new URI("/cars"))
+                        .contentType(MediaType.APPLICATION_JSON_UTF8)
+                        .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String responseJson = result.getResponse().getContentAsString();
+        JSONObject responseObject = new JSONObject(responseJson);
+        JSONObject embedded = responseObject.getJSONObject("_embedded");
+        JSONArray carList = embedded.getJSONArray("carList");
+
+        Assertions.assertThat(carList.length()).isEqualTo(cars.size());
+
+
+
+
 
     }
 
@@ -109,6 +147,18 @@ public class CarControllerTest {
          * TODO: Add a test to check that the `get` method works by calling
          *   a vehicle by ID. This should utilize the car from `getCar()` below.
          */
+        Car car = getCar();
+        car.setId(1L);
+
+        given(carService.findById(1L)).willReturn(car);
+
+        mvc.perform(
+                    get(new URI("/cars/1"))
+                            .contentType(MediaType.APPLICATION_JSON_UTF8)
+                            .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(1));
+
     }
 
     /**
@@ -122,6 +172,20 @@ public class CarControllerTest {
          *   when the `delete` method is called from the Car Controller. This
          *   should utilize the car from `getCar()` below.
          */
+        Car car = getCar();
+        car.setId(1L);
+
+        given(carService.findById(1L)).willReturn(car);
+        doNothing().when(carService).delete(1L);
+
+        mvc.perform(
+                    delete(new URI("/cars/1"))
+                            .contentType(MediaType.APPLICATION_JSON_UTF8)
+                            .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isNoContent());
+
+
+
     }
 
     /**

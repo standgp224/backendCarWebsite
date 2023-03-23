@@ -1,5 +1,6 @@
 package com.udacity.vehicles.service;
 
+import com.netflix.discovery.DiscoveryClient;
 import com.udacity.vehicles.client.prices.Price;
 import com.udacity.vehicles.domain.Location;
 import com.udacity.vehicles.domain.car.Car;
@@ -32,7 +33,6 @@ public class CarService {
     @Qualifier("maps")
     @Autowired
     private WebClient mapsClient;
-
 
     public CarService(CarRepository repository) {
         this.repository = repository;
@@ -77,7 +77,7 @@ public class CarService {
         private void setPrice(Car car) {
             Price price = pricingClient
                     .get()
-                    .uri("/prices/" + car.getId())
+                    .uri("/services/price?vehicleId=" + car.getId())
                     .retrieve()
                     .bodyToMono(Price.class)
                     .block();
@@ -106,6 +106,8 @@ public class CarService {
             }
 
         }
+
+
 
 
 
