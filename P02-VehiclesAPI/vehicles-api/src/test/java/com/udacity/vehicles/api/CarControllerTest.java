@@ -3,6 +3,7 @@ package com.udacity.vehicles.api;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.assertj.core.api.Assertions;
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -11,9 +12,7 @@ import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.doNothing;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -159,6 +158,23 @@ public class CarControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(1));
 
+    }
+
+    @Test
+    public void updateCar() throws Exception {
+        Car car = getCar();
+        car.setId(1L);
+        car.getDetails().setEngine("v12");
+        given(carService.findById(1L)).willReturn(car);
+
+        String carJson = new ObjectMapper().writeValueAsString(car);
+        mvc.perform(
+                        put(new URI("/cars/1"))
+                                .contentType(MediaType.APPLICATION_JSON_UTF8)
+                                .content(carJson)
+                                .accept(MediaType.APPLICATION_JSON_UTF8))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.details.engine").value("v12"));
     }
 
     /**
